@@ -33,33 +33,51 @@ To narrow where a rule applies (e.g. exempt generated code), use the standard
 
 ## Usage
 
-Reference the rules you want under `lint.plugins`. Deno supports local paths,
-`jsr:`, and `npm:` specifiers.
+Reference the rules you want under `lint.plugins`. The docs list local paths,
+`jsr:`, and `npm:` specifiers, but **`https://` raw URLs also work** — so you
+can consume these straight from GitHub with no vendoring step:
 
 ```jsonc
 {
   "lint": {
     "plugins": [
-      "./vendor/deno-lint-plugins/src/expression-complexity.ts",
-      "./vendor/deno-lint-plugins/src/function-length.ts",
-      "./vendor/deno-lint-plugins/src/no-foreach-mutation.ts",
-      "./vendor/deno-lint-plugins/src/no-imperative-loops.ts",
-      "./vendor/deno-lint-plugins/src/no-let.ts",
-      "./vendor/deno-lint-plugins/src/no-param-mutation.ts",
-      "./vendor/deno-lint-plugins/src/no-swallowed-catch.ts",
-      "./vendor/deno-lint-plugins/src/no-test-globals.ts",
-      "./vendor/deno-lint-plugins/src/test-file-length.ts"
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/expression-complexity.ts",
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/function-length.ts",
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/no-foreach-mutation.ts",
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/no-imperative-loops.ts",
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/no-let.ts",
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/no-param-mutation.ts",
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/no-swallowed-catch.ts",
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/no-test-globals.ts",
+      "https://raw.githubusercontent.com/startswithaj/deno-lint-plugins/main/src/test-file-length.ts"
     ]
   }
 }
 ```
 
-Common ways to get the files locally for a relative path:
+- **Pinning:** swap `main` for a commit SHA or tag (e.g. `v1.0.0`) for
+  reproducible linting. Tracking `main` is convenient but means a push here can
+  change a consumer's lint behavior on the next cache refresh.
+- **Caching:** Deno caches remote modules. After this repo changes, consumers
+  pulling from `main` must run `deno lint --reload` (or `deno cache --reload`)
+  to pick it up.
+
+Prefer fully local files? Vendor the repo and use relative paths instead:
 
 - **git submodule** — `git submodule add <repo-url> vendor/deno-lint-plugins`,
-  pinned by commit and updated with `git submodule update --remote`.
-- **clone / vendor** — clone the repo somewhere and point the relative paths at
-  it.
+  then reference `./vendor/deno-lint-plugins/src/<rule>.ts`.
+- **clone / vendor** — clone the repo somewhere and point relative paths at it.
+
+### Rule IDs
+
+`deno-lint-ignore` directives use the **plugin name + rule name**. Note the
+names are not uniform — eight plugins carry a `custom-` prefix, while
+`expression-complexity` does not:
+
+```ts
+// deno-lint-ignore custom-no-let/no-let -- store needs mutable state
+// deno-lint-ignore expression-complexity/no-nested-ternary
+```
 
 ## Notes on rule scope
 
